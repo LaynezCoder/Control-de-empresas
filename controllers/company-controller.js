@@ -8,6 +8,7 @@ const ADMINISTRADOR = "ADMINISTRATOR";
 const COMPANY = "COMPANY";
 
 let role;
+let id;
 
 function createAdministrator(req, res) {
     let administrator = new Company();
@@ -18,7 +19,9 @@ function createAdministrator(req, res) {
         } else if (createAdmin) {
             console.log('Administrator user is already created!');
             role = ADMINISTRADOR;
+            id = createAdmin._id;
             console.log('INITIAL ROL:', role);
+            console.log('ID:', id);
         } else {
             bcrypt.hash('12345', null, null, (err, passwordHash) => {
                 if (err) {
@@ -32,8 +35,10 @@ function createAdministrator(req, res) {
                             console.log('Failed to create user!');
                         } else if (userSaved) {
                             role = ADMINISTRADOR;
+                            id = userSaved._id;
                             console.log('Admin user created!');
                             console.log('ROLE:', role);
+                            console.log('ID:', id);
                         } else {
                             console.log('Admin user not created!');
                         }
@@ -61,7 +66,8 @@ function login(req, res) {
                         } else {
                             role = COMPANY
                         }
-                        console.log('User find role:', userFind.role, '|', 'Role variable: ', role, '|', 'Username', userFind.username)
+                        id = userFind._id
+                        console.log('User find role:', userFind.role, '|', 'Role variable: ', role, '|', 'Username:', userFind.username, '|', 'ID:', id)
                         res.status(200).send({ message: 'User successfully logged in!' });
                     } else {
                         res.status(404).send({ message: 'Incorrect username or password!' })
@@ -208,51 +214,43 @@ function getCompany(req, res) {
 function createEmployee(req, res) {
     let userId = req.params.id;
     let params = req.body;
-    let course = new Course();
+    let employee = new Employee();
 
-    console.log(session, TEACHER_ROL)
-    console.log(userId, idStudent)
-    if (session === TEACHER_ROL) {
-        if (userId == idStudent) {
-            User.findById(userId, (err, userFind) => {
+    if (role === COMPANY) {
+        if (userId == id) {
+            Company.findById(userId, (err, companyFind) => {
                 if (err) {
                     res.status(500).send({ message: 'Server error trying to add a course!' });
-                } else if (userFind) {
-                    Course.findOne({ name: params.name }, (err, courseFind) => {
-                        if (err) {
-                            res.status(500).send({ message: 'Server error!' });
-                        } else if (courseFind) {
-                            res.status(200).send({ message: 'Course already existing!' });
-                        } else {
-                            if (params.name && params.description) {
-                                course.name = params.name;
-                                course.description = params.description;
+                } else if (companyFind) {
+                    if (params.name && params.job && params.departament) {
+                        employee.name = params.name;
+                        employee.job = params.job;
+                        employee.departament = params.departament;
 
-                                User.findByIdAndUpdate(userId, { $push: { courses: course } }, { new: true }, (err, userUpdated) => {
-                                    if (err) {
-                                        res.status(500).send({ message: 'General server error!' });
-                                    } else if (userUpdated) {
-                                        res.status(200).send({ message: 'Course added!', userUpdated })
-                                    } else {
-                                        res.status(404).send({ message: 'Course not added!' });
-                                    }
-                                })
+                        Company.findByIdAndUpdate(userId, { $push: { employees: employee } }, { new: true }, (err, companyUpdated) => {
+                            if (err) {
+                                res.status(500).send({ message: 'General server error!' });
+                            } else if (companyUpdated) {
+                                res.status(200).send({ message: 'Course added!', companyUpdated })
                             } else {
-                                res.status(200).send({ message: 'Enter the minimum data to add a course!' })
+                                res.status(404).send({ message: 'Course not added!' });
                             }
-                        }
-                    })
+                        })
+                    } else {
+                        res.status(200).send({ message: 'Enter the minimum data to add a course!' })
+                    }
                 } else {
-                    res.status(200).send({ message: 'User does not exist!' });
+                    res.status(200).send({ message: 'Company does not exist!' });
                 }
             });
         } else {
-            res.status(200).send({ message: 'You cannot added a course that is not yours!' });
+            res.status(200).send({ message: 'No puede agregar empledos a una empresa que no sea la suya!' });
         }
     } else {
         res.status(404).send({ message: 'You dont have permissions!' });
     }
 }
+
 
 module.exports = {
     /**
@@ -268,5 +266,6 @@ module.exports = {
     /**
      * Employee exports
      */
-    createEmployee
+    createEmployee,
+    getEmployees
 }
