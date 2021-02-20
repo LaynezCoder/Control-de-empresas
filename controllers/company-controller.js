@@ -251,6 +251,27 @@ function createEmployee(req, res) {
     }
 }
 
+function getEmployees(req, res) {
+    let userId = req.params.id;
+
+    if (role === COMPANY) {
+        if (userId == id) {
+            Company.findOne({ _id: userId }).exec((err, userCourse) => {
+                if (err) {
+                    res.status(500).send({ message: 'General server error!' });
+                } else if (userCourse) {
+                    res.status(200).send({ message: 'Courses: ', employees: userCourse.employee })
+                } else {
+                    res.status(404).send({ message: 'Courses not added' });
+                }
+            })
+        } else {
+            res.status(200).send({ message: 'You cannot view a course that is not yours!' });
+        }
+    } else {
+        res.status(404).send({ message: 'You dont have permissions!' });
+    }
+}
 
 module.exports = {
     /**
