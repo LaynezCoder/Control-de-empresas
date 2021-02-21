@@ -1,4 +1,4 @@
-'user strict'
+'use strict'
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 var employeeSchema = Schema({
     name: String,
     job: String,
-    department: String
+    departament: String
 });
 
 module.exports = mongoose.model('employee', employeeSchema);
