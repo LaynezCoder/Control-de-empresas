@@ -11,7 +11,7 @@ var companySchema = Schema({
     employees: [{
         name: String,
         job: String,
-        department: String
+        departament: String
     }]
 });
 
