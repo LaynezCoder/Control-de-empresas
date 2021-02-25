@@ -192,9 +192,9 @@ function getCompanies(req, res) {
         if (err) {
             res.status(500).send({ message: 'Server error trying to search!' })
         } else if (companies) {
-            res.status(200).send({ message: 'Users found:', companies })
+            res.send({ message: 'Users found:', companies })
         } else {
-            res.status(200).send({ message: 'There are no records!' })
+            res.send({ message: 'There are no records!' })
         }
     })
 
@@ -207,9 +207,9 @@ function getCompany(req, res) {
         if (err) {
             res.status(500).send({ message: 'Server error trying to search!' });
         } else if (user) {
-            res.status(200).send({ message: 'Company found:', user });
+            res.send({ message: 'Company found:', user });
         } else {
-            res.status(200).send({ message: 'There are no companies!' });
+            res.send({ message: 'There are no companies!' });
         }
     })
 
@@ -244,60 +244,52 @@ function createEmployee(req, res) {
     let params = req.body;
     let employee = new Employee();
 
-    if (role === COMPANY) {
-        if (userId == id) {
-            Company.findById(userId, (err, companyFind) => {
-                if (err) {
-                    res.status(500).send({ message: 'Server error trying to add a course!' });
-                } else if (companyFind) {
-                    if (params.name && params.job && params.departament) {
-                        employee.name = params.name;
-                        employee.job = params.job;
-                        employee.departament = params.departament;
+    if (userId == req.user.sub) {
+        Company.findById(userId, (err, companyFind) => {
+            if (err) {
+                res.status(500).send({ message: 'Server error trying to add a course!' });
+            } else if (companyFind) {
+                if (params.name && params.job && params.departament) {
+                    employee.name = params.name;
+                    employee.job = params.job;
+                    employee.departament = params.departament;
 
-                        Company.findByIdAndUpdate(userId, { $push: { employees: employee } }, { new: true }, (err, companyUpdated) => {
-                            if (err) {
-                                res.status(500).send({ message: 'General server error!' });
-                            } else if (companyUpdated) {
-                                res.status(200).send({ message: 'Course added!', companyUpdated })
-                            } else {
-                                res.status(404).send({ message: 'Course not added!' });
-                            }
-                        })
-                    } else {
-                        res.status(200).send({ message: 'Enter the minimum data to add a course!' })
-                    }
+                    Company.findByIdAndUpdate(userId, { $push: { employees: employee } }, { new: true }, (err, companyUpdated) => {
+                        if (err) {
+                            res.status(500).send({ message: 'General server error!' });
+                        } else if (companyUpdated) {
+                            res.send({ message: 'Course added!', companyUpdated })
+                        } else {
+                            res.status(404).send({ message: 'Course not added!' });
+                        }
+                    })
                 } else {
-                    res.status(200).send({ message: 'Company does not exist!' });
+                    res.send({ message: 'Enter the minimum data to add a course!' })
                 }
-            });
-        } else {
-            res.status(200).send({ message: 'No puede agregar empledos a una empresa que no sea la suya!' });
-        }
+            } else {
+                res.send({ message: 'Company does not exist!' });
+            }
+        });
     } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
+        res.send({ message: 'You cannot add employees to a company that is not yours!' })
     }
 }
 
 function getEmployees(req, res) {
     let userId = req.params.id;
 
-    if (role === COMPANY) {
-        if (userId == id) {
-            Company.findOne({ _id: userId }).exec((err, userCourse) => {
-                if (err) {
-                    res.status(500).send({ message: 'General server error!' });
-                } else if (userCourse) {
-                    res.status(200).send({ message: 'Courses: ', employees: userCourse.employees })
-                } else {
-                    res.status(404).send({ message: 'Courses not added' });
-                }
-            })
-        } else {
-            res.status(200).send({ message: 'You cannot view a course that is not yours!' });
-        }
+    if (userId == req.user.sub) {
+        Company.findOne({ _id: userId }).exec((err, employees) => {
+            if (err) {
+                res.status(500).send({ message: 'General server error!' });
+            } else if (employees) {
+                res.send({ message: 'Employees: ', employees: employees.employees })
+            } else {
+                res.status(404).send({ message: 'Employees not added' });
+            }
+        })
     } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
+        res.send({ message: 'You cannot view a employees that is not yours!' });
     }
 }
 
@@ -306,39 +298,35 @@ function updatedEmployee(req, res) {
     let employeeId = req.params.idE;
     let update = req.body;
 
-    if (role === COMPANY) {
-        if (userId == id) {
-            if (update.name && update.job && update.departament) {
-                Company.findOne({ _id: userId }, (err, userFind) => {
-                    if (err) {
-                        res.status(500).send({ message: 'General error!' });
-                    } else if (userFind) {
-                        Company.findOneAndUpdate({ _id: userId, 'employees._id': employeeId },
-                            {
-                                'employees.$.name': update.name,
-                                'employees.$.job': update.job,
-                                'employees.$.departament': update.departament,
-                            }, { new: true }, (err, userUpdated) => {
-                                if (err) {
-                                    res.status(500).send({ message: 'General error when updating embedded document!' });
-                                } else if (userUpdated) {
-                                    res.status(200).send({ message: 'Updated course: ', userUpdated });
-                                } else {
-                                    res.status(404).send({ message: 'Contact not updated!' });
-                                }
-                            })
-                    } else {
-                        res.status(200).send({ message: 'Non-existent user!' });
-                    }
-                })
-            } else {
-                res.status(200).send({ message: 'Please enter all the required data!' });
-            }
+    if (userId == req.user.sub) {
+        if (update.name && update.job && update.departament) {
+            Company.findOne({ _id: userId }, (err, userFind) => {
+                if (err) {
+                    res.status(500).send({ message: 'General error!' });
+                } else if (userFind) {
+                    Company.findOneAndUpdate({ _id: userId, 'employees._id': employeeId },
+                        {
+                            'employees.$.name': update.name,
+                            'employees.$.job': update.job,
+                            'employees.$.departament': update.departament,
+                        }, { new: true }, (err, userUpdated) => {
+                            if (err) {
+                                res.status(500).send({ message: 'General error when updating embedded document!' });
+                            } else if (userUpdated) {
+                                res.send({ message: 'Updated course: ', userUpdated });
+                            } else {
+                                res.status(404).send({ message: 'Contact not updated!' });
+                            }
+                        })
+                } else {
+                    res.send({ message: 'Non-existent user!' });
+                }
+            })
         } else {
-            res.status(404).send({ message: 'You cannot updated a course that is not yours!' });
+            res.status(200).send({ message: 'Please enter all the required data!' });
         }
     } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
+        res.status(404).send({ message: 'You cannot updated a course that is not yours!' });
     }
 }
 
@@ -475,7 +463,6 @@ module.exports = {
      */
     createAdministrator,
     login,
-
     /**
      * Administrator only exports
      */
