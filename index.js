@@ -1,9 +1,9 @@
 'use strict'
 
-const companyController = require('./controllers/company-controller')
-const mongoose = require('mongoose');
-const app = require('./app');
-const port = 3200;
+var companyController = require('./controllers/company-controller')
+var mongoose = require('mongoose');
+var app = require('./app');
+const PORT = 3200;
 
 
 mongoose.Promise = global.Promise;
@@ -12,10 +12,7 @@ mongoose.connect('mongodb://localhost:27017/ControlDeEmpresas', { useNewUrlParse
     .then(() => {
         console.log('Connected to the database!');
         companyController.createAdministrator();
-        app.listen(port, () => {
+        app.listen(PORT, () => {
             console.log('Express server is running!');
         })
-    })
-    .catch((err) => {
-        console.log('Error connecting to database!', err);
-    })
+    }).catch(err => console.log('Error connecting to database!', err))
