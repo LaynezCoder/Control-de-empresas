@@ -48,27 +48,27 @@ function login(req, res) {
     let params = req.body;
 
     if (params.username && params.password) {
-        Company.findOne({ username: params.username }, (err, userFind) => {
+        Company.findOne({ username: params.username.toLowerCase().trim() }, (err, userFind) => {
             if (err) {
                 res.status(500).send({ message: 'Server error, trying to search!' })
             } else if (userFind) {
-                bcrypt.compare(params.password, userFind.password, (err, checkPassword) => {
+                bcrypt.compare(params.password.trim(), userFind.password, (err, checkPassword) => {
                     if (err) {
                         res.status(500).send({ message: 'General server error!' });
                     } else if (checkPassword) {
                         if (params.getToken) {
                             res.send({ token: jwt.createToken(userFind) });
+                            console.log('User role logged:', userFind.role, '|', 'Username:', userFind.username, '|', 'ID:', userFind._id)
                         } else {
-                            res.send({ message: 'Usuario logeado' });
                             console.log('User find role:', userFind.role, '|', 'Role variable: ', userFind.role, '|', 'Username:', userFind.username, '|', 'ID:', userFind._id)
-                            res.status(200).send({ message: 'User successfully logged in!' });
+                            res.send({ message: 'User successfully logged in!' });
                         }
                     } else {
                         res.status(404).send({ message: 'Incorrect username or password!' })
                     }
                 })
             } else {
-                res.status(200).send({ message: 'Account not found!' })
+                res.send({ message: 'Account not found!' })
             }
         })
     } else {
@@ -83,32 +83,35 @@ function saveCompany(req, res) {
     if (params.name && params.password && params.username) {
         Company.findOne({ username: params.username }, (err, userFind) => {
             if (err) {
-                res.status(500).send({ message: 'Error general', err })
+                res.status(500).send({ message: 'General error', err })
             } else if (userFind) {
-                res.status(200).send({ message: 'Nombre ya utilizado' })
+                res.send({ message: 'Name already used!' })
             } else {
-                bcrypt.hash(params.password, null, null, (err, passwordHash) => {
+                bcrypt.hash(params.password.trim(), null, null, (err, passwordHash) => {
                     if (err) {
-                        res.status(500).send({ message: 'Error en la encriptación de la contraseña' })
+                        res.status(500).send({ message: 'Password encryption error!' })
                     } else if (passwordHash) {
-                        company.username = params.username
+                        company.username = params.username.toLowerCase().trim()
                         company.password = passwordHash
-                        company.name = params.name
+                        company.name = params.name.trim()
                         company.role = COMPANY
-                        company.save((err, userSaved) => {
+
+                        company.save((err, companySaved) => {
                             if (err) {
-                                res.status(500).send({ message: 'Error al guardar los datos' })
-                            } else if (userSaved) {
-                                res.status(200).send({ message: 'Compania guardado exitosamente' })
+                                res.status(500).send({ message: 'Failed to save data!' })
+                            } else if (companySaved) {
+                                res.send({ message: 'Company saved successfully' })
                             }
                         })
+                    } else {
+                        res.status(401).send({ message: 'Password not encrypted!' });
                     }
 
                 })
             }
         })
     } else {
-        res.status(200).send({ message: 'Por favor ingresa todos los datos obligatorios' })
+        res.send({ message: 'Please enter all the required data! ' })
     }
 }
 
@@ -116,88 +119,120 @@ function updateCompany(req, res) {
     let userId = req.params.id;
     let update = req.body;
 
-    if (role === ADMINISTRADOR) {
-        if (update.password) {
-            res.status(500).send({ message: 'You cannot update the password!' });
-        } else if (update.role) {
-            res.status(500).send({ message: 'You cannot update the role!' });
-        } else {
-            if (update.name && update.username) {
-                Company.findOne({ username: update.username }, (err, usernameFind) => {
-                    if (err) {
-                        res.status(500).send({ message: 'Server error!' });
-                    } else if (usernameFind) {
-                        res.status(200).send({ message: 'Username already existing, your account cannot be updated!' });
-                    } else {
-                        Company.findByIdAndUpdate(userId, update, { new: true }, (err, userUpdated) => {
-                            if (err) {
-                                res.status(500).send({ message: 'Server error trying to update!' });
-                            } else if (userUpdated) {
-                                res.status(200).send({ message: 'Updated user!', userUpdated });
-                            } else {
-                                res.status(200).send({ message: 'There are no records to update!' });
-                            }
-                        });
-                    }
-                })
-            } else {
-                res.status(200).send({ message: 'Please enter all the required data!' })
-            }
-        }
+    if (update.password) {
+        res.status(500).send({ message: 'You cannot update the password!' });
+    } else if (update.role) {
+        res.status(500).send({ message: 'You cannot update the role!' });
     } else {
-        res.status(200).send({ message: 'No tiene persmisos!' })
+        if (update.name && update.username) {
+            Company.findOne({ username: update.username.toLowerCase().trim() }, (err, usernameFind) => {
+                if (err) {
+                    res.status(500).send({ message: 'Server error!' });
+                } else if (usernameFind) {
+                    res.send({ message: 'Username already existing, your account cannot be updated!' });
+                } else {
+                    Company.findByIdAndUpdate({ _id: userId }, { username: update.username.toLowerCase(), name: update.name.trim() }, { new: true }, (err, companyUpdated) => {
+                        if (err) {
+                            res.status(500).send({ message: 'Server error trying to update!' });
+                        } else if (companyUpdated) {
+                            res.send({ message: 'Updated company!', companyUpdated });
+                        } else {
+                            res.send({ message: 'There are no records to update!' });
+                        }
+                    });
+                }
+            })
+        } else {
+            res.send({ message: 'Please enter all the required data!' })
+        }
     }
 }
 
 function deleteCompany(req, res) {
     let userId = req.params.id;
+    let params = req.body;
 
-    if (role === ADMINISTRADOR) {
-        Company.findByIdAndRemove(userId, (err, userRemoved) => {
+    if (userId != req.user.sub) {
+        Company.findOne({ _id: userId }, (err, companyFind) => {
             if (err) {
-                res.status(500).send({ message: 'Error en el servidor al intentar eliminar el registro' });
-            } else if (userRemoved) {
-                res.status(200).send({ message: 'usuario eliminado', userRemoved });
+                res.status(500).send({ message: 'General error!' });
+            } else if (companyFind) {
+                if (params.password) {
+                    bcrypt.compare(params.password.trim(), companyFind.password, (err, checkPassword) => {
+                        if (err) {
+                            res.status(500).send({ message: 'Failed to verify password!' });
+                        } else if (checkPassword) {
+                            Company.findByIdAndRemove(userId, (err, companyRemoved) => {
+                                if (err) {
+                                    res.send({ message: 'Server error!' });
+                                } else if (companyRemoved) {
+                                    res.send({ message: 'Company removed!', companyRemoved });
+                                } else {
+                                    res.send({ message: 'The company does not exist, or has already been eliminated' });
+                                }
+                            })
+                        } else {
+                            res.status(403).send({ message: 'Wrong password, you cannot delete your account without your password!' });
+                        }
+                    })
+                } else {
+                    res.send({ message: 'To delete, enter your password' });
+                }
             } else {
-                res.status(200).send({ message: 'No existe el usuario, o ya fue eliminado' });
+                res.status(403).send({ message: 'User not deleted!' });
             }
         })
     } else {
-        res.status(200).send({ message: 'No tiene persmisos!' })
+        res.send({ message: 'He cannot eliminate himself!' });
     }
 }
 
 function getCompanies(req, res) {
-    if (role === ADMINISTRADOR) {
-        Company.find({}).exec((err, users) => { //Busqueda general (filtraciones)
-            if (err) {
-                res.status(500).send({ message: 'Error en el servidor al intentar buscar' })
-            } else if (users) {
-                res.status(200).send({ message: 'usuarios encontrados', users })
-            } else {
-                res.status(200).send({ message: 'No hay registros' })
-            }
-        })
-    } else {
-        res.status(200).send({ message: 'No tiene persmisos!' })
-    }
+    Company.find({}).exec((err, companies) => {
+        if (err) {
+            res.status(500).send({ message: 'Server error trying to search!' })
+        } else if (companies) {
+            res.status(200).send({ message: 'Users found:', companies })
+        } else {
+            res.status(200).send({ message: 'There are no records!' })
+        }
+    })
+
 }
 
 function getCompany(req, res) {
     let userId = req.params.id;
 
-    if (role === ADMINISTRADOR) {
-        Company.findById(userId).exec((err, user) => {
+    Company.findById(userId).exec((err, user) => {
+        if (err) {
+            res.status(500).send({ message: 'Server error trying to search!' });
+        } else if (user) {
+            res.status(200).send({ message: 'Company found:', user });
+        } else {
+            res.status(200).send({ message: 'There are no companies!' });
+        }
+    })
+
+}
+
+function searchCompany(req, res) {
+    var params = req.body;
+
+    if (params.search) {
+        Company.find({
+            $or: [{ name: params.search.trim() },
+            { username: params.search.toLowerCase().trim() }]
+        }, (err, resultSearch) => {
             if (err) {
-                res.status(500).send({ message: 'Error en el servidor al intentar buscar' });
-            } else if (user) {
-                res.status(200).send({ message: 'usuario encontrado', user });
+                res.status(500).send({ message: 'General error!' });
+            } else if (resultSearch) {
+                res.send({ message: 'Matches found: ', resultSearch });
             } else {
-                res.status(200).send({ message: 'No hay registros' });
+                res.status(403).send({ message: 'Search without matches!' });
             }
         })
     } else {
-        res.status(200).send({ message: 'No tiene persmisos!' })
+        res.status(403).send({ message: 'Enter data in the search field!' });
     }
 }
 
@@ -439,12 +474,17 @@ module.exports = {
      * Company exports
      */
     createAdministrator,
-    saveCompany,
     login,
+
+    /**
+     * Administrator only exports
+     */
     updateCompany,
+    saveCompany,
     deleteCompany,
     getCompanies,
     getCompany,
+    searchCompany,
     /**
      * Employee exports
      */
