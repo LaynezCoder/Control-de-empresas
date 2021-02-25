@@ -1,14 +1,12 @@
 'use strict'
 
-const Company = require('../models/company-models');
-const Employee = require('../models/employee-model');
-const bcrypt = require('bcrypt-nodejs');
+var Company = require('../models/company-models');
+var Employee = require('../models/employee-model');
+var bcrypt = require('bcrypt-nodejs');
+var jwt = require('../services/jwt');
 
 const ADMINISTRADOR = "ADMINISTRATOR";
 const COMPANY = "COMPANY";
-
-let role;
-let id;
 
 /**
  * Companies functions
@@ -58,14 +56,13 @@ function login(req, res) {
                     if (err) {
                         res.status(500).send({ message: 'General server error!' });
                     } else if (checkPassword) {
-                        if (userFind.role === ADMINISTRADOR) {
-                            role = ADMINISTRADOR
+                        if (params.getToken) {
+                            res.send({ token: jwt.createToken(userFind) });
                         } else {
-                            role = COMPANY
+                            res.send({ message: 'Usuario logeado' });
+                            console.log('User find role:', userFind.role, '|', 'Role variable: ', userFind.role, '|', 'Username:', userFind.username, '|', 'ID:', userFind._id)
+                            res.status(200).send({ message: 'User successfully logged in!' });
                         }
-                        id = userFind._id
-                        console.log('User find role:', userFind.role, '|', 'Role variable: ', role, '|', 'Username:', userFind.username, '|', 'ID:', id)
-                        res.status(200).send({ message: 'User successfully logged in!' });
                     } else {
                         res.status(404).send({ message: 'Incorrect username or password!' })
                     }
