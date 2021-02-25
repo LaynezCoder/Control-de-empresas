@@ -23,8 +23,8 @@ api.post('/searchCompany', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], 
 /**
  * Employees routes
  */
-api.put('/:id/createEmployee', COMPANY_CONTROLLER.createEmployee);
-api.get('/:id/getEmployees', COMPANY_CONTROLLER.getEmployees);
+api.put('/:id/createEmployee', [mdAuth.ensureAuth, mdAuth.ensureAuthCompany], COMPANY_CONTROLLER.createEmployee);
+api.get('/:id/getEmployees', [mdAuth.ensureAuth, mdAuth.ensureAuthCompany], COMPANY_CONTROLLER.getEmployees);
 api.put('/:idC/updateEmployee/:idE', COMPANY_CONTROLLER.updatedEmployee);
 api.put('/:idC/deleteEmployee/:idE', COMPANY_CONTROLLER.deleteEmployee);
 
