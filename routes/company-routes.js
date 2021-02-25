@@ -8,17 +8,17 @@ var mdAuth = require('../middlewares/authentication');
 /**
  * Companies routes
  */
-
 api.post('/login', COMPANY_CONTROLLER.login);
 
 /**
  * Administrator only
  */
 api.post('/saveCompany', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], COMPANY_CONTROLLER.saveCompany);
-api.put('/updateCompany/:id', COMPANY_CONTROLLER.updateCompany);
-api.delete('/deleteCompany/:id', COMPANY_CONTROLLER.deleteCompany);
-api.get('/getCompanies', COMPANY_CONTROLLER.getCompanies);
-api.post('/getCompany/:id', COMPANY_CONTROLLER.getCompany);
+api.put('/updateCompany/:id', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], COMPANY_CONTROLLER.updateCompany);
+api.delete('/deleteCompany/:id', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], COMPANY_CONTROLLER.deleteCompany);
+api.get('/getCompanies', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], COMPANY_CONTROLLER.getCompanies);
+api.post('/getCompany/:id', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], COMPANY_CONTROLLER.getCompany);
+api.post('/searchCompany', [mdAuth.ensureAuth, mdAuth.ensureAuthAdministrator], COMPANY_CONTROLLER.searchCompany);
 
 /**
  * Employees routes
