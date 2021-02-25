@@ -380,18 +380,25 @@ function getEmployeeForName(req, res) {
     let companyId = req.params.idC;
     let employeeName = req.body.name;
 
-    Company.aggregate([
-        { $unwind: "$employees" },
-        { $match: { "employees.name": employeeName } },
-        { $project: { _id: false, name: "$employees.name" } }
-
-    ], (err, userCourse) => {
+    Company.findById(companyId, (err, companyFind) => {
         if (err) {
-            res.status(500).send({ message: 'General server error!' });
-        } else if (userCourse) {
-            res.status(200).send({ message: 'Courses: ', employees: userCourse })
+            res.status(500).send({ message: 'Server error trying to add a course!' });
+        } else if (companyFind) {
+            Company.aggregate([
+                { $unwind: "$_id" },
+                { $unwind: "$employees" },
+                { $match: { "employees.name": employeeName } },
+                { $project: { _id: false, name: "$employees" } }], (err, userCourse) => {
+                    if (err) {
+                        res.status(500).send({ message: 'General server error!' });
+                    } else if (userCourse) {
+                        res.status(200).send({ message: 'Emplpyees: ', employees: userCourse })
+                    } else {
+                        res.status(404).send({ message: 'Courses not added' });
+                    }
+                })
         } else {
-            res.status(404).send({ message: 'Courses not added' });
+            res.status(200).send({ message: 'Company does not exist!' });
         }
     })
 }
