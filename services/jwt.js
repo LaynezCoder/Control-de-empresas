@@ -1,12 +1,13 @@
 'use strict'
 
-const jwt = require('jwt-simple')
-const moment = require('moment')
-const SECRET_KEY = '2E1B145AA8A46DBEE8CEF910D91C664F441A1E70ACB8FDA38DB9B3984BD2AA9D'
+var jwt = require('jwt-simple')
+var moment = require('moment')
+const SECRET_KEY = 'Shhhh'
 
 exports.createToken = (user) => {
-    let payload = {
+    var payload = {
         sub: user._id,
+        name: user.name,
         username: user.username,
         role: user.role,
         iat: moment().unix(),
