@@ -21,10 +21,7 @@ function createAdministrator(req, res) {
             console.log('Failed to create user!');
         } else if (createAdmin) {
             console.log('Administrator user is already created!');
-            role = ADMINISTRADOR;
-            id = createAdmin._id;
-            console.log('INITIAL ROL:', role);
-            console.log('ID:', id);
+            console.log('ROLE:', createAdmin.role);
         } else {
             bcrypt.hash('12345', null, null, (err, passwordHash) => {
                 if (err) {
@@ -37,11 +34,8 @@ function createAdministrator(req, res) {
                         if (err) {
                             console.log('Failed to create user!');
                         } else if (userSaved) {
-                            role = ADMINISTRADOR;
-                            id = userSaved._id;
                             console.log('Admin user created!');
-                            console.log('ROLE:', role);
-                            console.log('ID:', id);
+                            console.log('ROLE:', userSaved.role);
                         } else {
                             console.log('Admin user not created!');
                         }
@@ -89,39 +83,35 @@ function saveCompany(req, res) {
     let company = new Company();
     let params = req.body;
 
-    if (role === ADMINISTRADOR) {
-        if (params.name && params.password && params.username) {
-            Company.findOne({ username: params.username }, (err, userFind) => {
-                if (err) {
-                    res.status(500).send({ message: 'Error general', err })
-                } else if (userFind) {
-                    res.status(200).send({ message: 'Nombre ya utilizado' })
-                } else {
-                    bcrypt.hash(params.password, null, null, (err, passwordHash) => {
-                        if (err) {
-                            res.status(500).send({ message: 'Error en la encriptación de la contraseña' })
-                        } else if (passwordHash) {
-                            company.username = params.username
-                            company.password = passwordHash
-                            company.name = params.name
-                            company.role = COMPANY
-                            company.save((err, userSaved) => {
-                                if (err) {
-                                    res.status(500).send({ message: 'Error al guardar los datos' })
-                                } else if (userSaved) {
-                                    res.status(200).send({ message: 'Compania guardado exitosamente' })
-                                }
-                            })
-                        }
+    if (params.name && params.password && params.username) {
+        Company.findOne({ username: params.username }, (err, userFind) => {
+            if (err) {
+                res.status(500).send({ message: 'Error general', err })
+            } else if (userFind) {
+                res.status(200).send({ message: 'Nombre ya utilizado' })
+            } else {
+                bcrypt.hash(params.password, null, null, (err, passwordHash) => {
+                    if (err) {
+                        res.status(500).send({ message: 'Error en la encriptación de la contraseña' })
+                    } else if (passwordHash) {
+                        company.username = params.username
+                        company.password = passwordHash
+                        company.name = params.name
+                        company.role = COMPANY
+                        company.save((err, userSaved) => {
+                            if (err) {
+                                res.status(500).send({ message: 'Error al guardar los datos' })
+                            } else if (userSaved) {
+                                res.status(200).send({ message: 'Compania guardado exitosamente' })
+                            }
+                        })
+                    }
 
-                    })
-                }
-            })
-        } else {
-            res.status(200).send({ message: 'Por favor ingresa todos los datos obligatorios' })
-        }
+                })
+            }
+        })
     } else {
-        res.status(500).send({ message: 'No tienes permisos agregar empresas!' })
+        res.status(200).send({ message: 'Por favor ingresa todos los datos obligatorios' })
     }
 }
 
