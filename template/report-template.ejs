@@ -4,20 +4,33 @@
 <head>
     <style>
         table {
+            width: 100%;
+            background-color: white;
             border-collapse: collapse;
+            text-align: left;
         }
 
-        table,
-        th,
+        tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+
         td {
-            border: 1px solid black;
+            border: solid 1px #ddd;
+            padding: 8px;
+        }
+
+        th {
+            padding: 15px;
+            color: #eee;
+            background-color: #4CAF50;
+            text-align: left;
         }
     </style>
 </head>
 
 <body>
     <div style="width: 85%; margin: 0 7.5%;">
-        <div style="text-align: center; padding-left: 50px;">
+        <div style="text-align: center;">
             <h3>Employees Report</h5>
                 <table>
                     <thead>
