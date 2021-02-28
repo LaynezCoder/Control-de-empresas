@@ -35,28 +35,23 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Id</th>
                         <th>Nombre</th>
                         <th>Usuario</th>
-                        <th>Dirección</th>
-                        <th>Teléfono</th>
-                        <th>Correo electrónico</th>
                     </tr>
                 </thead>
 
-                <% if (employees.length> 0) { %>
-                    <% employees.forEach(employee=> {%>
+                <% if (companies.length> 0) { %>
+                    <% companies.forEach(companie=> {%>
                         <tr>
                             <td>
-                                <%= employee._id %>
+                                <%= companie._id %>
                             </td>
                             <td>
-                                <%= employee.name %>
+                                <%= companie.name %>
                             </td>
                             <td>
-                                <%= employee.job %>
-                            </td>
-                            <td>
-                                <%= employee.departament %>
+                                <%= companie.username %>
                             </td>
                         </tr>
                         <% });%>
