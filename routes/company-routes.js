@@ -2,6 +2,7 @@
 
 const COMPANY_CONTROLLER = require('../controllers/company-controller');
 const PDF = require('../pdf/pdf-report');
+const EXCEL = require('../excel/excel-report');
 
 var express = require('express');
 var api = express.Router();
@@ -33,9 +34,10 @@ api.put('/:idC/deleteEmployee/:idE', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthComp
 api.get('/:idC/getEmployeeForId/:idE', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], COMPANY_CONTROLLER.getEmployeesForId);
 
 /**
- * Reports
+ * Reports of employees
  */
-api.get('/createReport/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], PDF.createReport);
+api.get('/createPDF/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], PDF.createReport);
+api.get('/createXLSX/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], EXCEL.createReport);
 
 
 /**
