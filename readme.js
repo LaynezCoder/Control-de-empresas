@@ -1,3 +1,9 @@
+
+/**
+ * Cuantos datos se necesitan o son los minimos para el modelo de datos
+ * obtener empleados por el id nombre y demas
+ * Ver algunas modificaciones o validaciones por hacer, probar de nuevo
+ */
 function getEmployeesForId(req, res) {
     let companyId = req.params.idC;
     let employeeId = req.params.idE;
