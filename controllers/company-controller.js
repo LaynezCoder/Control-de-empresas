@@ -277,10 +277,10 @@ function createEmployee(req, res) {
 }
 
 function getEmployees(req, res) {
-    let companieId = req.params.id;
+    let companyId = req.params.id;
 
-    if (companieId == req.user.sub) {
-        Company.findOne({ _id: companieId }).exec((err, employees) => {
+    if (companyId == req.user.sub) {
+        Company.findOne({ _id: companyId }).exec((err, employees) => {
             if (err) {
                 res.status(500).send({ message: 'General server error!' });
             } else if (employees) {
@@ -357,13 +357,13 @@ function getEmployeesForId(req, res) {
     let employeeId = req.params.idE;
 
     if (companyId == req.user.sub) {
-        Employee.findById(employeeId, { new: true }, (err, employees) => {
+        Company.findOne({ _id: companyId }, { employees: { $elemMatch: { _id: employeeId } } }).exec((err, employees) => {
             if (err) {
-                return res.status(500).send({ message: 'Error general' });
+                res.status(500).send({ message: 'General server error!' });
             } else if (employees) {
-                return res.send({ message: 'empleados:', employees });
+                res.send({ message: 'Employees:', employee: employees.employees })
             } else {
-                return res.status(404).send({ message: 'empleados no encontrados' });
+                res.status(404).send({ message: 'Employees not added' });
             }
         })
     } else {
