@@ -1,13 +1,12 @@
 'use strict'
 
+const MD_AUTH = require('../middlewares/authentication');
 const COMPANY_CONTROLLER = require('../controllers/company-controller');
 const PDF = require('../pdf/pdf-report');
 const EXCEL = require('../excel/excel-report');
 
 var express = require('express');
 var api = express.Router();
-
-const MD_AUTH = require('../middlewares/authentication');
 
 /**
  * Companies routes
@@ -36,8 +35,13 @@ api.get('/:idC/getEmployeeForId/:idE', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCo
 /**
  * Reports of employees
  */
-api.get('/createPDF/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], PDF.createReport);
-api.get('/createXLSX/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], EXCEL.createReport);
+api.get('/createEmployeePDF/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], PDF.createReportOfEmployees);
+api.get('/createEmployeeXLSX/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], EXCEL.createReportOfEmployees);
+
+/**
+ * Reports of companies
+ */
+
 
 
 /**
