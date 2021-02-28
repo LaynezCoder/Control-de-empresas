@@ -53,6 +53,32 @@ function createReportOfEmployees(req, res) {
     }
 }
 
+function createReportOfCompanies(req, res) {
+    Company.find({}).exec((err, companies) => {
+        if (err) {
+            res.status(500).send({ message: 'Server error trying to search!' })
+        } else if (companies) {
+            ejs.renderFile(path.join(EJS_COMPANIES), { companies: companies }, (err, data) => {
+                if (err) {
+                    res.status(500).send({ message: 'Error!' });
+                } else {
+                    let name = FILE + 'Companies-' + DATE.getDate() + EXTENSION
+                    pdf.create(data, OPTIONS).toFile(name, (err, data) => {
+                        if (err) {
+                            res.status(500).send({ message: 'Error!' });
+                        } else if (data) {
+                            res.send({ message: 'Report created at: ' + DATE.getDateAnotherFormat() })
+                        }
+                    });
+                }
+            });
+        } else {
+            res.send({ message: 'There are no records!' })
+        }
+    })
+}
+
 module.exports = {
-    createReportOfEmployees
+    createReportOfEmployees,
+    createReportOfCompanies
 };
