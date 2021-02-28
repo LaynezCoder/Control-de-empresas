@@ -2,6 +2,7 @@
 
 var Company = require('../models/company-models');
 var Employee = require('../models/employee-model');
+var STRING_UTILS = require('../resources/stringUtils');
 var bcrypt = require('bcrypt-nodejs');
 var jwt = require('../services/jwt');
 
@@ -93,7 +94,7 @@ function saveCompany(req, res) {
                     } else if (passwordHash) {
                         company.username = params.username.toLowerCase().trim()
                         company.password = passwordHash
-                        company.name = params.name.trim()
+                        company.name = STRING_UTILS.capitalizeInitials(params.name.trim())
                         company.role = COMPANY
 
                         company.save((err, companySaved) => {
@@ -116,7 +117,7 @@ function saveCompany(req, res) {
 }
 
 function updateCompany(req, res) {
-    let userId = req.params.id;
+    let companieId = req.params.id;
     let update = req.body;
 
     if (update.password) {
@@ -131,7 +132,7 @@ function updateCompany(req, res) {
                 } else if (usernameFind) {
                     res.send({ message: 'Username already existing, your account cannot be updated!' });
                 } else {
-                    Company.findByIdAndUpdate({ _id: userId }, { username: update.username.toLowerCase(), name: update.name.trim() }, { new: true }, (err, companyUpdated) => {
+                    Company.findByIdAndUpdate({ _id: companieId }, { username: update.username.toLowerCase(), name: STRING_UTILS.capitalizeInitials(update.name.trim()) }, { new: true }, (err, companyUpdated) => {
                         if (err) {
                             res.status(500).send({ message: 'Server error trying to update!' });
                         } else if (companyUpdated) {
@@ -149,11 +150,11 @@ function updateCompany(req, res) {
 }
 
 function deleteCompany(req, res) {
-    let userId = req.params.id;
+    let companieId = req.params.id;
     let params = req.body;
 
-    if (userId != req.user.sub) {
-        Company.findOne({ _id: userId }, (err, companyFind) => {
+    if (companieId != req.user.sub) {
+        Company.findOne({ _id: companieId }, (err, companyFind) => {
             if (err) {
                 res.status(500).send({ message: 'General error!' });
             } else if (companyFind) {
@@ -162,7 +163,7 @@ function deleteCompany(req, res) {
                         if (err) {
                             res.status(500).send({ message: 'Failed to verify password!' });
                         } else if (checkPassword) {
-                            Company.findByIdAndRemove(userId, (err, companyRemoved) => {
+                            Company.findByIdAndRemove(companieId, (err, companyRemoved) => {
                                 if (err) {
                                     res.send({ message: 'Server error!' });
                                 } else if (companyRemoved) {
@@ -201,9 +202,9 @@ function getCompanies(req, res) {
 }
 
 function getCompany(req, res) {
-    let userId = req.params.id;
+    let companieId = req.params.id;
 
-    Company.findById(userId).exec((err, companie) => {
+    Company.findById(companieId).exec((err, companie) => {
         if (err) {
             res.status(500).send({ message: 'Server error trying to search!' });
         } else if (companie) {
@@ -240,19 +241,19 @@ function searchCompany(req, res) {
  * Employee functions
  */
 function createEmployee(req, res) {
-    let userId = req.params.id;
+    let companieId = req.params.id;
     let params = req.body;
     let employee = new Employee();
 
-    if (userId == req.user.sub) {
-        Company.findById(userId, (err, companyFind) => {
+    if (companieId == req.user.sub) {
+        Company.findById(companieId, (err, companyFind) => {
             if (err) {
                 res.status(500).send({ message: 'Server error trying to add a course!' });
             } else if (companyFind) {
                 if (params.name && params.job && params.departament) {
-                    employee.name = params.name;
-                    employee.job = params.job;
-                    employee.departament = params.departament;
+                    employee.name = STRING_UTILS.capitalizeInitials(params.name.trim())
+                    employee.job = STRING_UTILS.capitalizeFirstLetter(params.job.trim())
+                    employee.departament = STRING_UTILS.capitalizeFirstLetter(params.departament.trim());
 
                     Company.findByIdAndUpdate(userId, { $push: { employees: employee } }, { new: true }, (err, companyUpdated) => {
                         if (err) {
@@ -276,10 +277,10 @@ function createEmployee(req, res) {
 }
 
 function getEmployees(req, res) {
-    let userId = req.params.id;
+    let companieId = req.params.id;
 
-    if (userId == req.user.sub) {
-        Company.findOne({ _id: userId }).exec((err, employees) => {
+    if (companieId == req.user.sub) {
+        Company.findOne({ _id: companieId }).exec((err, employees) => {
             if (err) {
                 res.status(500).send({ message: 'General server error!' });
             } else if (employees) {
@@ -294,21 +295,21 @@ function getEmployees(req, res) {
 }
 
 function updatedEmployee(req, res) {
-    let userId = req.params.idC;
+    let companieId = req.params.idC;
     let employeeId = req.params.idE;
     let update = req.body;
 
-    if (userId == req.user.sub) {
+    if (companieId == req.user.sub) {
         if (update.name && update.job && update.departament) {
-            Company.findOne({ _id: userId }, (err, companieFind) => {
+            Company.findOne({ _id: companieId }, (err, companieFind) => {
                 if (err) {
                     res.status(500).send({ message: 'General error!' });
                 } else if (companieFind) {
-                    Company.findOneAndUpdate({ _id: userId, 'employees._id': employeeId },
+                    Company.findOneAndUpdate({ _id: companieId, 'employees._id': employeeId },
                         {
-                            'employees.$.name': update.name,
-                            'employees.$.job': update.job,
-                            'employees.$.departament': update.departament,
+                            'employees.$.name': STRING_UTILS.capitalizeInitials(update.name.trim()),
+                            'employees.$.job': STRING_UTILS.capitalizeFirstLetter(update.job.trim()),
+                            'employees.$.departament': STRING_UTILS.capitalizeFirstLetter(update.departament.trim()),
                         }, { new: true }, (err, employeeUpdated) => {
                             if (err) {
                                 res.status(500).send({ message: 'General error when updating embedded document!' });
@@ -331,11 +332,11 @@ function updatedEmployee(req, res) {
 }
 
 function deleteEmployee(req, res) {
-    let userId = req.params.idC;
+    let companieId = req.params.idC;
     let courseId = req.params.idE;
 
-    if (userId == req.user.sub) {
-        Company.findOneAndUpdate({ _id: userId, 'employees._id': courseId },
+    if (companieId == req.user.sub) {
+        Company.findOneAndUpdate({ _id: companieId, 'employees._id': courseId },
             { $pull: { employees: { _id: courseId } } }, { new: true }, (err, employeeRemove) => {
                 if (err) {
                     res.status(500).send({ message: 'General error while deleting embedded document!' });
@@ -356,13 +357,13 @@ function getEmployeesForId(req, res) {
     let employeeId = req.params.idE;
 
     if (companyId == req.user.sub) {
-        Employee.findById(employeeId, { new: true }, (err, contactUpdated) => {
+        Employee.findById(employeeId, { new: true }, (err, employees) => {
             if (err) {
-                return res.status(500).send({ message: 'Error general en la actualización' });
-            } else if (contactUpdated) {
-                return res.send({ message: 'Contacto actualizado', contactUpdated });
+                return res.status(500).send({ message: 'Error general' });
+            } else if (employees) {
+                return res.send({ message: 'empleados:', employees });
             } else {
-                return res.status(404).send({ message: 'Contacto no actualizado' });
+                return res.status(404).send({ message: 'empleados no encontrados' });
             }
         })
     } else {
