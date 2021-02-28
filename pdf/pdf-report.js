@@ -8,8 +8,8 @@ var Company = require('../models/company-models');
 const FILE = './pdf/';
 const DATE = require('../resources/date')
 const EXTENSION = '.pdf'
-const EJS_EMPLOYEES = './template/employees-report-template.ejs'
-const EJS_COMPANIES = './template/companies-report-template.ejs'
+const EJS_EMPLOYEES = './templates/employees-report-template.ejs'
+const EJS_COMPANIES = './templates/companies-report-template.ejs'
 
 const OPTIONS = {
     'height': '11.25in',
