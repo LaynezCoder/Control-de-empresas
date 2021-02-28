@@ -35,7 +35,7 @@ api.get('/:idC/getEmployeeForId/:idE', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCo
 /**
  * Reports
  */
-api.get('/createReport/:id', PDF.createReport)
+api.get('/createReport/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], PDF.createReport);
 
 
 /**
