@@ -5,10 +5,11 @@ var pdf = require("html-pdf");
 var path = require("path");
 var Company = require('../models/company-models');
 
-const FILE = './pdf/Employees_';
+const FILE = './pdf/';
 const DATE = require('../resources/date')
 const EXTENSION = '.pdf'
-const EJS_PACKAGE = './template/'
+const EJS_EMPLOYEES = './template/employees-report-template.ejs'
+const EJS_COMPANIES = './template/companies-report-template.ejs'
 
 const OPTIONS = {
     'height': '11.25in',
@@ -21,7 +22,7 @@ const OPTIONS = {
     },
 };
 
-function createReport(req, res) {
+function createReportOfEmployees(req, res) {
     let companyId = req.params.id;
 
     if (companyId == req.user.sub) {
@@ -29,12 +30,12 @@ function createReport(req, res) {
             if (err) {
                 res.status(500).send({ message: 'General server error!' });
             } else if (employees) {
-                ejs.renderFile(path.join(EJS_PACKAGE, "report-template.ejs"), { employees: employees.employees }, (err, data) => {
+                ejs.renderFile(path.join(EJS_EMPLOYEES), { employees: employees.employees }, (err, data) => {
                     if (err) {
                         res.status(500).send({ message: 'Error!' });
                     } else {
-                        let companie = 'for_' + employees.name + '_'
-                        pdf.create(data, OPTIONS).toFile(FILE + companie + DATE.getDate() + EXTENSION, (err, data) => {
+                        let name = FILE + employees.name + '-employees-' + DATE.getDate() + EXTENSION
+                        pdf.create(data, OPTIONS).toFile(name, (err, data) => {
                             if (err) {
                                 res.status(500).send({ message: 'Error!' });
                             } else if (data) {
@@ -53,5 +54,5 @@ function createReport(req, res) {
 }
 
 module.exports = {
-    createReport
+    createReportOfEmployees
 };

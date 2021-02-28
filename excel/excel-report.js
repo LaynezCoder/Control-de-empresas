@@ -5,11 +5,11 @@ var excel = require('exceljs');
 var Company = require('../models/company-models');
 
 const NAME_WORKSHEET = 'Employees';
-const FILE = './excel/Employees_';
+const FILE = './excel/';
 const EXTENSION = '.xlsx'
 const DATE = require('../resources/date')
 
-function createReport(req, res) {
+function createReportOfEmployees(req, res) {
     let companyId = req.params.id;
 
     if (companyId == req.user.sub) {
@@ -37,8 +37,8 @@ function createReport(req, res) {
 
                 worksheet.addRows(employees.employees);
 
-                let companie = 'for_' + employees.name + '_'
-                workbook.xlsx.writeFile(FILE + companie + DATE.getDate() + EXTENSION)
+                let name = FILE + employees.name + '-employees-' + DATE.getDate() + EXTENSION
+                workbook.xlsx.writeFile(name)
                     .then(() => {
                         res.send({ message: 'Report created at: ' + DATE.getDateAnotherFormat() })
                     })
@@ -53,5 +53,5 @@ function createReport(req, res) {
 }
 
 module.exports = {
-    createReport
+    createReportOfEmployees
 }
