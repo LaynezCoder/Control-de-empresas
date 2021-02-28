@@ -41,8 +41,8 @@ api.get('/createEmployeeXLSX/:id', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompan
 /**
  * Reports of companies
  */
-
-
+api.get('/createCompaniesPDF', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthAdministrator], PDF.createReportOfCompanies);
+api.get('/createCompaniesXLSX', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthAdministrator], EXCEL.createReportOfCompanies);
 
 /**
  * Employees find
