@@ -20,28 +20,31 @@ const OPTIONS = {
 function createReport(req, res) {
     let userId = req.params.id;
 
-    Company.findOne({ _id: userId }).exec((err, employees) => {
-        if (err) {
-            res.status(500).send({ message: 'General server error!' });
-        } else if (employees) {
-            ejs.renderFile(path.join('./template/', "report-template.ejs"), { employees: employees.employees }, (err, data) => {
-                if (err) {
-                    res.status(500).send({ message: 'Error!' });
-                } else {
-
-                    pdf.create(data, OPTIONS).toFile(FILE, function (err, data) {
-                        if (err) {
-                            res.status(500).send({ message: 'Error!' });
-                        } else {
-                            res.send({ message: 'File created successfully' });
-                        }
-                    });
-                }
-            });
-        } else {
-            res.status(404).send({ message: 'Employees not added' });
-        }
-    })
+    if (userId == req.user.sub) {
+        Company.findOne({ _id: userId }).exec((err, employees) => {
+            if (err) {
+                res.status(500).send({ message: 'General server error!' });
+            } else if (employees) {
+                ejs.renderFile(path.join('./template/', "report-template.ejs"), { employees: employees.employees }, (err, data) => {
+                    if (err) {
+                        res.status(500).send({ message: 'Error!' });
+                    } else {
+                        pdf.create(data, OPTIONS).toFile(FILE, function (err, data) {
+                            if (err) {
+                                res.status(500).send({ message: 'Error!' });
+                            } else {
+                                res.send({ message: 'File created successfully' });
+                            }
+                        });
+                    }
+                });
+            } else {
+                res.status(404).send({ message: 'Employees not added' });
+            }
+        })
+    } else {
+        res.send({ message: 'You cannot view a employees that is not yours!' });
+    }
 }
 
 module.exports = {
