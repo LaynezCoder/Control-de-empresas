@@ -2,10 +2,10 @@
 
 var Company = require('../models/company-models');
 var Employee = require('../models/employee-model');
-var STRING_UTILS = require('../resources/stringUtils');
 var bcrypt = require('bcrypt-nodejs');
 var jwt = require('../services/jwt');
 
+const STRING_UTILS = require('../resources/stringUtils');
 const ADMINISTRADOR = "ADMINISTRATOR";
 const COMPANY = "COMPANY";
 
@@ -27,6 +27,7 @@ function createAdministrator(req, res) {
                     res.status(500).send({ message: 'Password encryption error!' })
                 } else if (passwordHash) {
                     administrator.username = 'admin'
+                    administrator.name = 'Administrador'
                     administrator.password = passwordHash
                     administrator.role = ADMINISTRADOR
                     administrator.save((err, userSaved) => {
@@ -198,7 +199,6 @@ function getCompanies(req, res) {
             res.send({ message: 'There are no records!' })
         }
     })
-
 }
 
 function getCompany(req, res) {
