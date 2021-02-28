@@ -192,7 +192,7 @@ function getCompanies(req, res) {
         if (err) {
             res.status(500).send({ message: 'Server error trying to search!' })
         } else if (companies) {
-            res.send({ message: 'Users found:', companies })
+            res.send({ message: 'Companies found:', companies })
         } else {
             res.send({ message: 'There are no records!' })
         }
@@ -203,11 +203,11 @@ function getCompanies(req, res) {
 function getCompany(req, res) {
     let userId = req.params.id;
 
-    Company.findById(userId).exec((err, user) => {
+    Company.findById(userId).exec((err, companie) => {
         if (err) {
             res.status(500).send({ message: 'Server error trying to search!' });
-        } else if (user) {
-            res.send({ message: 'Company found:', user });
+        } else if (companie) {
+            res.send({ message: 'Company found:', companie });
         } else {
             res.send({ message: 'There are no companies!' });
         }
@@ -300,22 +300,22 @@ function updatedEmployee(req, res) {
 
     if (userId == req.user.sub) {
         if (update.name && update.job && update.departament) {
-            Company.findOne({ _id: userId }, (err, userFind) => {
+            Company.findOne({ _id: userId }, (err, companieFind) => {
                 if (err) {
                     res.status(500).send({ message: 'General error!' });
-                } else if (userFind) {
+                } else if (companieFind) {
                     Company.findOneAndUpdate({ _id: userId, 'employees._id': employeeId },
                         {
                             'employees.$.name': update.name,
                             'employees.$.job': update.job,
                             'employees.$.departament': update.departament,
-                        }, { new: true }, (err, userUpdated) => {
+                        }, { new: true }, (err, employeeUpdated) => {
                             if (err) {
                                 res.status(500).send({ message: 'General error when updating embedded document!' });
-                            } else if (userUpdated) {
-                                res.send({ message: 'Updated course: ', userUpdated });
+                            } else if (employeeUpdated) {
+                                res.send({ message: 'Updated employees: ', employeeUpdated });
                             } else {
-                                res.status(404).send({ message: 'Contact not updated!' });
+                                res.status(404).send({ message: 'Employees not updated!' });
                             }
                         })
                 } else {
@@ -326,7 +326,7 @@ function updatedEmployee(req, res) {
             res.status(200).send({ message: 'Please enter all the required data!' });
         }
     } else {
-        res.status(404).send({ message: 'You cannot updated a course that is not yours!' });
+        res.status(404).send({ message: 'You cannot updated a employees that is not yours!' });
     }
 }
 
@@ -334,126 +334,39 @@ function deleteEmployee(req, res) {
     let userId = req.params.idC;
     let courseId = req.params.idE;
 
-    if (role === COMPANY) {
-        if (userId == id) {
-            Company.findOneAndUpdate({ _id: userId, 'employees._id': courseId },
-                { $pull: { employees: { _id: courseId } } }, { new: true }, (err, courseRemove) => {
-                    if (err) {
-                        res.status(500).send({ message: 'General error while deleting embedded document!' });
-                    } else if (courseRemove) {
-                        res.status(200).send({ message: 'Course removed: ', courseRemove });
-                    } else {
-                        res.status(404).send({ message: 'Course not found or already deleted!' });
-                    }
-                })
-        } else {
-            res.status(404).send({ message: 'You cannot deleted a course that is not yours!' });
-        }
+    if (userId == req.user.sub) {
+        Company.findOneAndUpdate({ _id: userId, 'employees._id': courseId },
+            { $pull: { employees: { _id: courseId } } }, { new: true }, (err, employeeRemove) => {
+                if (err) {
+                    res.status(500).send({ message: 'General error while deleting embedded document!' });
+                } else if (employeeRemove) {
+                    res.send({ message: 'Employee removed: ', employeeRemove });
+                } else {
+                    res.status(404).send({ message: 'Employee not found or already deleted!' });
+                }
+            })
     } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
+        res.status(404).send({ message: 'You cannot deleted a cemployees that is not yours!' });
     }
+
 }
 
-/**
- * Get functions
- * VALIDAR NO BUSCAR DE OTRAS EMPRESAS
- */
 function getEmployeesForId(req, res) {
     let companyId = req.params.idC;
     let employeeId = req.params.idE;
 
-    if (role === COMPANY) {
-        if (companyId == id) {
-            Company.aggregate([
-                { $unwind: "$employees" },
-                { $match: { "employees.name": "Alberto" } },
-                { $project: { _id: false, name: "$employees.name" } }
-
-            ], (err, userCourse) => {
-                if (err) {
-                    res.status(500).send({ message: 'General server error!' });
-                } else if (userCourse) {
-                    res.status(200).send({ message: 'Courses: ', employees: userCourse.employees })
-                } else {
-                    res.status(404).send({ message: 'Courses not added' });
-                }
-            })
-        } else {
-            res.status(200).send({ message: 'You cannot view a course that is not yours!' });
-        }
+    if (companyId == req.user.sub) {
+        Employee.findById(employeeId, { new: true }, (err, contactUpdated) => {
+            if (err) {
+                return res.status(500).send({ message: 'Error general en la actualización' });
+            } else if (contactUpdated) {
+                return res.send({ message: 'Contacto actualizado', contactUpdated });
+            } else {
+                return res.status(404).send({ message: 'Contacto no actualizado' });
+            }
+        })
     } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
-    }
-}
-
-function getEmployeeForName(req, res) {
-    let companyId = req.params.idC;
-    let employeeName = req.body.name;
-
-    Company.findById(companyId, (err, companyFind) => {
-        if (err) {
-            res.status(500).send({ message: 'Server error trying to add a course!' });
-        } else if (companyFind) {
-            Company.aggregate([
-                { $unwind: "$_id" },
-                { $unwind: "$employees" },
-                { $match: { "employees.name": employeeName } },
-                { $project: { _id: false, name: "$employees" } }], (err, userCourse) => {
-                    if (err) {
-                        res.status(500).send({ message: 'General server error!' });
-                    } else if (userCourse) {
-                        res.status(200).send({ message: 'Emplpyees: ', employees: userCourse })
-                    } else {
-                        res.status(404).send({ message: 'Courses not added' });
-                    }
-                })
-        } else {
-            res.status(200).send({ message: 'Company does not exist!' });
-        }
-    })
-}
-
-function getEmployeeForJob(req, res) {
-    let job = req.body.job;
-
-    if (role === COMPANY) {
-        if (job) {
-            Company.findOne({ 'employees.job': job }).exec((err, userCourse) => {
-                if (err) {
-                    res.status(500).send({ message: 'General server error!' });
-                } else if (userCourse) {
-                    res.status(200).send({ message: 'Courses: ', employees: userCourse.employees })
-                } else {
-                    res.status(404).send({ message: 'Courses not added' });
-                }
-            })
-        } else {
-            res.status(200).send({ message: 'Ingrese un puesto' })
-        }
-    } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
-    }
-}
-
-function getEmployeeForDepartament(req, res) {
-    let departament = req.body.departament;
-
-    if (role === COMPANY) {
-        if (departament) {
-            Company.findOne({ 'employees.departament': departament }).exec((err, userCourse) => {
-                if (err) {
-                    res.status(500).send({ message: 'General server error!' });
-                } else if (userCourse) {
-                    res.status(200).send({ message: 'Courses: ', employees: userCourse.employees })
-                } else {
-                    res.status(404).send({ message: 'Courses not added' });
-                }
-            })
-        } else {
-            res.status(200).send({ message: 'Ingrese un departamento' })
-        }
-    } else {
-        res.status(404).send({ message: 'You dont have permissions!' });
+        res.send({ message: 'You cannot view a course that is not yours!' });
     }
 }
 
@@ -482,8 +395,11 @@ module.exports = {
     /**
      * Get employees
      */
-    getEmployeesForId,
+    getEmployeesForId
+
+    /*
     getEmployeeForName,
     getEmployeeForJob,
     getEmployeeForDepartament
+    */
 }
