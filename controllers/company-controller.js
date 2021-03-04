@@ -6,6 +6,7 @@ var bcrypt = require('bcrypt-nodejs');
 var jwt = require('../services/jwt');
 
 const STRING_UTILS = require('../resources/stringUtils');
+const e = require('express');
 const ADMINISTRADOR = "ADMINISTRATOR";
 const COMPANY = "COMPANY";
 
@@ -221,7 +222,7 @@ function searchCompany(req, res) {
 
     if (params.search) {
         Company.find({
-            $or: [{ name: params.search.trim() },
+            $or: [{ name: STRING_UTILS.capitalizeFirstLetter(params.search.trim()) },
             { username: params.search.toLowerCase().trim() }]
         }, (err, resultSearch) => {
             if (err) {
@@ -367,9 +368,62 @@ function getEmployeesForId(req, res) {
             }
         })
     } else {
-        res.send({ message: 'You cannot view a course that is not yours!' });
+        res.send({ message: 'You cannot view a employees that is not yours!' });
     }
 }
+
+function searchEmployee(req, res) {
+    let companyId = req.user.sub;
+    let search = req.body.search;
+    let username = req.user.username;
+
+    Company.aggregate([
+        { $match: { username: username } },
+        { $unwind: '$employees' },
+        {
+            $match: {
+                $or: [{ 'employees.name': search },
+                { 'employees.departament': search },
+                { 'employees.job': search }]
+            }
+        },
+        {
+            "$group": {
+                _id: companyId,
+                employees: { "$push": "$employees" }
+            }
+        }
+    ], (err, employee) => {
+        if (err) {
+            res.status(500).send({ message: 'General server error!' });
+        } else if (employee) {
+            res.status(200).send({ Result: employee })
+        } else {
+            res.status(404).send({ message: 'Courses not added' });
+        }
+    })
+}
+
+function getCount(req, res) {
+    let companyId = req.user.sub;
+    let username = req.user.username;
+
+    Company.aggregate([
+        { $match: { username: username } },
+        { $unwind: '$employees' },
+        { $group: { _id: '$_id', 'sum': { $sum: 1 } } },
+        { $group: { _id: companyId, total: { '$sum': '$sum' } } }
+    ]).exec((err, count) => {
+        if (err) {
+            res.status(500).send({ message: 'General server error!' });
+        } else if (count) {
+            res.send({ Result: count })
+        } else {
+            res.status(404).send({ message: 'Employees not added' });
+        }
+    })
+}
+
 
 module.exports = {
     /**
@@ -396,11 +450,10 @@ module.exports = {
     /**
      * Get employees
      */
-    getEmployeesForId
+    getEmployeesForId,
+    searchEmployee
 
-    /*
-    getEmployeeForName,
-    getEmployeeForJob,
-    getEmployeeForDepartament
-    */
+
+
+    , getCount
 }
