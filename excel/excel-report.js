@@ -42,8 +42,7 @@ function createReportOfEmployees(req, res) {
                 workbook.xlsx.writeFile(name)
                     .then(() => {
                         res.send({ message: 'Report created at: ' + DATE.getDateAnotherFormat() })
-                    })
-
+                    }).catch(err => { res.status(500).send({ message: 'Error creating report!' }) })
             } else {
                 res.status(404).send({ message: 'Employees not found!' });
             }
@@ -81,8 +80,7 @@ function createReportOfCompanies(req, res) {
             workbook.xlsx.writeFile(name)
                 .then(() => {
                     res.send({ message: 'Report created at: ' + DATE.getDateAnotherFormat() })
-                })
-
+                }).catch(err => { res.status(500).send({ message: 'Error creating report!' }) })
         } else {
             res.status(404).send({ message: 'Employees not found!' });
         }
