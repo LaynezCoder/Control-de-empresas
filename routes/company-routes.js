@@ -45,12 +45,12 @@ api.get('/createCompaniesPDF', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthAdministra
 api.get('/createCompaniesXLSX', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthAdministrator], EXCEL.createReportOfCompanies);
 
 /**
- * Employees find
+ * Employees find by parameters
  */
 api.put('/getEmployeeByParameter', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], COMPANY_CONTROLLER.searchEmployee);
 
 /**
- * get count
+ * Total number of employees
  */
 api.get('/getCount', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], COMPANY_CONTROLLER.getCount);
 
