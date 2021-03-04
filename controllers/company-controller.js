@@ -6,7 +6,6 @@ var bcrypt = require('bcrypt-nodejs');
 var jwt = require('../services/jwt');
 
 const STRING_UTILS = require('../resources/stringUtils');
-const e = require('express');
 const ADMINISTRADOR = "ADMINISTRATOR";
 const COMPANY = "COMPANY";
 
@@ -382,24 +381,24 @@ function searchEmployee(req, res) {
         { $unwind: '$employees' },
         {
             $match: {
-                $or: [{ 'employees.name': search },
-                { 'employees.departament': search },
-                { 'employees.job': search }]
+                $or: [{ 'employees.name': STRING_UTILS.capitalizeInitials(search) },
+                { 'employees.departament': STRING_UTILS.capitalizeFirstLetter(search) },
+                { 'employees.job': STRING_UTILS.capitalizeFirstLetter(search) }]
             }
         },
         {
-            "$group": {
+            $group: {
                 _id: companyId,
-                employees: { "$push": "$employees" }
+                employees: { $push: '$employees' }
             }
         }
     ], (err, employee) => {
         if (err) {
             res.status(500).send({ message: 'General server error!' });
         } else if (employee) {
-            res.status(200).send({ Result: employee })
+            res.send({ Result: employee })
         } else {
-            res.status(404).send({ message: 'Courses not added' });
+            res.status(404).send({ message: 'Employees not added' });
         }
     })
 }
@@ -451,9 +450,6 @@ module.exports = {
      * Get employees
      */
     getEmployeesForId,
-    searchEmployee
-
-
-
-    , getCount
+    searchEmployee,
+    getCount
 }
