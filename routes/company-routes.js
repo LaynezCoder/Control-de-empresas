@@ -46,10 +46,12 @@ api.get('/createCompaniesXLSX', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthAdministr
 
 /**
  * Employees find
-
-api.get('/:idC/getEmployeeForName', COMPANY_CONTROLLER.getEmployeeForName);
-api.get('/getEmployeeForJob', COMPANY_CONTROLLER.getEmployeeForJob);
-api.get('/getEmployeeForDepartament', COMPANY_CONTROLLER.getEmployeeForDepartament);
  */
+api.put('/getEmployeeByParameter', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], COMPANY_CONTROLLER.searchEmployee);
+
+/**
+ * get count
+ */
+api.get('/getCount', [MD_AUTH.ensureAuth, MD_AUTH.ensureAuthCompany], COMPANY_CONTROLLER.getCount);
 
 module.exports = api;
