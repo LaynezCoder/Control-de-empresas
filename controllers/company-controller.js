@@ -83,7 +83,7 @@ function saveCompany(req, res) {
     let params = req.body;
 
     if (params.name && params.password && params.username) {
-        Company.findOne({ username: params.username }, (err, userFind) => {
+        Company.findOne({ username: params.username.toLowerCase().trim() }, (err, userFind) => {
             if (err) {
                 res.status(500).send({ message: 'General error', err })
             } else if (userFind) {
@@ -221,7 +221,7 @@ function searchCompany(req, res) {
 
     if (params.search) {
         Company.find({
-            $or: [{ name: STRING_UTILS.capitalizeFirstLetter(params.search.trim()) },
+            $or: [{ name: STRING_UTILS.capitalizeInitials(params.search.trim()) },
             { username: params.search.toLowerCase().trim() }]
         }, (err, resultSearch) => {
             if (err) {
