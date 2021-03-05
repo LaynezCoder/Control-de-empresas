@@ -259,13 +259,13 @@ function createEmployee(req, res) {
                         if (err) {
                             res.status(500).send({ message: 'General server error!' });
                         } else if (companyUpdated) {
-                            res.send({ message: 'Course added!', companyUpdated })
+                            res.send({ message: 'Employee added!', companyUpdated })
                         } else {
-                            res.status(404).send({ message: 'Course not added!' });
+                            res.status(404).send({ message: 'Employee not added!' });
                         }
                     })
                 } else {
-                    res.send({ message: 'Enter the minimum data to add a course!' })
+                    res.send({ message: 'Enter the minimum data to add a employee!' })
                 }
             } else {
                 res.send({ message: 'Company does not exist!' });
@@ -347,7 +347,7 @@ function deleteEmployee(req, res) {
                 }
             })
     } else {
-        res.status(404).send({ message: 'You cannot deleted a cemployees that is not yours!' });
+        res.status(404).send({ message: 'You cannot deleted a employees that is not yours!' });
     }
 
 }
