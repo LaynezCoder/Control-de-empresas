@@ -252,10 +252,10 @@ function createEmployee(req, res) {
             } else if (companyFind) {
                 if (params.name && params.job && params.departament) {
                     employee.name = STRING_UTILS.capitalizeInitials(params.name.trim())
-                    employee.job = STRING_UTILS.capitalizeFirstLetter(params.job.trim())
-                    employee.departament = STRING_UTILS.capitalizeFirstLetter(params.departament.trim());
+                    employee.job = STRING_UTILS.capitalizeInitials(params.job.trim())
+                    employee.departament = STRING_UTILS.capitalizeInitials(params.departament.trim());
 
-                    Company.findByIdAndUpdate(userId, { $push: { employees: employee } }, { new: true }, (err, companyUpdated) => {
+                    Company.findByIdAndUpdate(companieId, { $push: { employees: employee } }, { new: true }, (err, companyUpdated) => {
                         if (err) {
                             res.status(500).send({ message: 'General server error!' });
                         } else if (companyUpdated) {
@@ -308,8 +308,8 @@ function updatedEmployee(req, res) {
                     Company.findOneAndUpdate({ _id: companieId, 'employees._id': employeeId },
                         {
                             'employees.$.name': STRING_UTILS.capitalizeInitials(update.name.trim()),
-                            'employees.$.job': STRING_UTILS.capitalizeFirstLetter(update.job.trim()),
-                            'employees.$.departament': STRING_UTILS.capitalizeFirstLetter(update.departament.trim()),
+                            'employees.$.job': STRING_UTILS.capitalizeInitials(update.job.trim()),
+                            'employees.$.departament': STRING_UTILS.capitalizeInitials(update.departament.trim()),
                         }, { new: true }, (err, employeeUpdated) => {
                             if (err) {
                                 res.status(500).send({ message: 'General error when updating embedded document!' });
@@ -382,8 +382,8 @@ function searchEmployee(req, res) {
         {
             $match: {
                 $or: [{ 'employees.name': STRING_UTILS.capitalizeInitials(search) },
-                { 'employees.departament': STRING_UTILS.capitalizeFirstLetter(search) },
-                { 'employees.job': STRING_UTILS.capitalizeFirstLetter(search) }]
+                { 'employees.departament': STRING_UTILS.capitalizeInitials(search) },
+                { 'employees.job': STRING_UTILS.capitalizeInitials(search) }]
             }
         },
         {
